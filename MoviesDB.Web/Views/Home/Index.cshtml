@@ -1,0 +1,140 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css" rel="stylesheet"/>
+    <link href="~/Content/themes/base/jquery-ui.min.css" rel="stylesheet" />
+    <link href="~/Content/ceruleamTheme.css" rel="stylesheet" />
+</head>
+<body>
+<div style="width: 90%; margin: 0 auto" class="tablecontainer">
+    <table id="myDatatable" class="table table-striped">
+        <thead style="background-color: #51B2EA">
+        <tr>
+            <th></th>
+            <th></th>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Director</th>
+            <th>Date released</th>
+        </tr>
+        </thead>
+    </table>
+    <a class="popup btn btn-primary" href="/home/save/0" style="margin: 20px 0">Add New</a>
+    <a id="btnExportFile" class="btn btn-primary" href="" style="margin: 20px 0">Export To File</a>
+    <a id="downloadAnchorElem" style="display:none"></a>
+</div>
+    
+    <script src="~/Scripts/jquery-3.1.1.min.js"></script>
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+    <script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+    <script src="~/Scripts/jquery-ui-1.12.1.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#btnExportFile').on('click',
+                function() {
+                    $.getJSON("/Home/GetJsonData", null, function (data) {
+                        var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data.data));
+
+                        var dlAnchorElem = document.getElementById('downloadAnchorElem');
+                        dlAnchorElem.setAttribute("href", dataStr);
+                        dlAnchorElem.setAttribute("download", "movies.txt");
+                        dlAnchorElem.click();
+                    });
+                });
+
+            var oTable = $('#myDatatable').DataTable({
+                'ajax': {
+                    'url': '/home/getMovies',
+                    'type': 'get',
+                    'datatype': 'json'
+                },
+                'columns': [
+                    { 'data': 'Id', 'width': '50px', 'render': function(data) {
+                        return '<a class="popup" href="/home/save/' + data + '">Edit</a>';
+                        }
+                    },
+                    { 'data': 'Id', 'width': '50px', 'render': function(data) {
+                        return '<a class="popup" href="/home/delete/' + data + '">Delete</a>';
+                        }
+                    },
+                    { 'data': 'Id', 'autowidth': true },
+                    { 'data': 'Title', 'autowidth': true },
+                    { 'data': 'DirectorName', 'autowidth': true },
+                    { 'data': 'ReleaseDate', 'autowidth': true,
+                        "type": "date ",
+                        "render":function (value) {
+                            if (value === null) return "";
+
+                            var pattern = /Date\(([^)]+)\)/;
+                            var results = pattern.exec(value);
+                            var dt = new Date(parseFloat(results[1]));
+
+                            return (dt.getMonth() + 1) + "/" + dt.getDate() + "/" + dt.getFullYear();} }
+                ]
+            });
+
+            $('.tablecontainer').on('click',
+                'a.popup',
+                function(e) {
+                    e.preventDefault();
+                    openPopup($(this).attr('href'));
+                });
+
+            function openPopup(pageUrl) {
+                var $pageContent = $('<div/>');
+                $pageContent.load(pageUrl, function() {
+                    $('#popupForm', $pageContent).removeData('validator');
+                    $('#popupForm', $pageContent).removeData('unobtrusiveValidation');
+                    $.validator.unobtrusive.parse('form');
+                });
+
+                $dialog = $('<div class="popupWindow" style="overflow:auto"></div>')
+                    .html($pageContent)
+                    .dialog({
+                        dragable: false,
+                        autoOpen: false,
+                        resizable: false,
+                        model: true,
+                        title: 'Popup Dialog',
+                        height: 550,
+                        width: 600,
+                        close: function() {
+                            $dialog.dialog('destroy').remove();
+                        }
+                    });
+
+                $('.popupWindow').on('submit',
+                    '#popupForm',
+                    function(e) {
+                        var url = $('#popupForm')[0].action;
+                        $.ajax({
+                            type: 'POST',
+                            url: url,
+                            data: $('#popupForm').serialize(),
+                            success: function(data) {
+                                if (data.status) {
+                                    $dialog.dialog('close');
+                                    oTable.ajax.reload();
+                                }
+                            }
+                        });
+
+                        e.preventDefault();
+                    });
+
+                $dialog.dialog('open');
+            }
+        })
+    </script>
+</body>
+</html>

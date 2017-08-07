@@ -1,0 +1,15 @@
+﻿@model MoviesDB.Models.Movie
+
+@using (Html.BeginForm("Delete", "Home", FormMethod.Post, new {id = "popupForm"}))
+{
+    @Html.HiddenFor(m => m.Id)
+    <div class="form-group">
+        <label>Title</label>
+        @Html.TextBoxFor(m => m.Title, new {@class = "form-control"})
+        @Html.ValidationMessageFor(m => m.Title)
+    </div>
+
+    <div>
+        <input type="submit" value="Delete"/>
+    </div>
+}

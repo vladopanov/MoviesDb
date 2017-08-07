@@ -1,0 +1,29 @@
+﻿@model MoviesDB.Models.Movie
+    
+<h2>Save</h2>
+@using (Html.BeginForm("Save", "Home", FormMethod.Post, new {id = "popupForm"}))
+{
+    if (Model != null && Model.Id > 0)
+    {
+        @Html.HiddenFor(m => m.Id)
+    }
+
+    <div class="form-group">
+        <label>Title</label>
+        @Html.TextBoxFor(m => m.Title, new {@class = "form-control"})
+        @Html.ValidationMessageFor(m => m.Title)
+    </div>
+    <div class="form-group">
+        <label>Director</label>
+        @Html.TextBoxFor(m => m.DirectorName, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.DirectorName)
+    </div>
+    <div class="form-group">
+        <label>Release Date</label>
+        @Html.TextBoxFor(m => m.ReleaseDate, new { @class = "form-control", placeholder = "MM/dd/yyyy" } )
+        @Html.ValidationMessageFor(m => m.ReleaseDate)
+    </div>
+    <div>
+        <input type="submit" value="Save"/>
+    </div>
+}
